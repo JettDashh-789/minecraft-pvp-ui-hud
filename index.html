@@ -1,748 +1,1344 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Minecraft PvP HUD Mockup</title>
+    <title>Minecraft PvP Client Launcher - v26.1.2</title>
     <style>
-      :root {
-        --bg: #070d0c;
-        --bg2: #0d1714;
-        --panel: rgba(19, 32, 29, 0.8);
-        --panel2: rgba(12, 23, 19, 0.9);
-        --green: #67f39d;
-        --green-2: #35c97c;
-        --lime: #d9ff7a;
-        --cyan: #72e1ff;
-        --blue: #7ab9ff;
-        --amber: #ffce5a;
-        --red: #ff6c6c;
-        --white: #eafaf4;
-        --muted: #92b2a1;
-        --shadow: rgba(0, 0, 0, 0.42);
-        --outline: rgba(123, 255, 188, 0.28);
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      html, body {
-        margin: 0;
-        height: 100%;
-        background:
-          linear-gradient(to bottom, rgba(12, 21, 19, 0.4), rgba(10, 13, 15, 0.7)),
-          radial-gradient(circle at 50% 15%, rgba(90, 214, 123, 0.12), transparent 30%),
-          linear-gradient(180deg, #09100d 0%, #050707 100%);
-        font-family: "Segoe UI", Tahoma, sans-serif;
-        color: var(--white);
-        overflow: hidden;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background:
-          repeating-linear-gradient(
-            0deg,
-            rgba(255,255,255,0.025),
-            rgba(255,255,255,0.025) 2px,
-            transparent 2px,
-            transparent 4px
-          ),
-          linear-gradient(90deg, rgba(0,0,0,0.1), rgba(0,0,0,0));
-        pointer-events: none;
-        mix-blend-mode: screen;
-      }
-
-      #app {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-      }
-
-      .hud {
-        position: relative;
-        width: 100%;
-        height: 100%;
-      }
-
-      .vignette {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background: radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.38) 100%);
-      }
-
-      .crosshair {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 42px;
-        height: 42px;
-        transform: translate(-50%, -50%);
-        filter: drop-shadow(0 0 10px rgba(115, 255, 185, 0.55));
-      }
-
-      .crosshair::before,
-      .crosshair::after {
-        content: "";
-        position: absolute;
-        background: rgba(121, 255, 185, 0.95);
-        box-shadow: 0 0 8px rgba(121, 255, 185, 0.8);
-      }
-
-      .crosshair::before {
-        width: 2px;
-        height: 42px;
-        left: 50%;
-        top: 0;
-        transform: translateX(-50%);
-      }
-
-      .crosshair::after {
-        width: 42px;
-        height: 2px;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-
-      .crosshair .dot {
-        position: absolute;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 0 16px rgba(255,255,255,0.8);
-      }
-
-      .crosshair .ring {
-        position: absolute;
-        inset: 9px;
-        border: 1px solid rgba(135, 255, 185, 0.8);
-        border-radius: 50%;
-        box-shadow: inset 0 0 10px rgba(135, 255, 185, 0.15);
-      }
-
-      .top-panel {
-        position: absolute;
-        left: 50%;
-        top: 24px;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 12px;
-        align-items: center;
-      }
-
-      .pill {
-        position: relative;
-        padding: 10px 18px;
-        min-width: 150px;
-        background: rgba(17, 27, 24, 0.76);
-        border: 1px solid rgba(103, 243, 157, 0.4);
-        border-radius: 8px;
-        box-shadow: inset 0 0 12px rgba(103, 243, 157, 0.08), 0 0 18px rgba(33, 88, 62, 0.25);
-      }
-
-      .pill::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(90deg, rgba(103,243,157,0.10), transparent 35%, transparent 65%, rgba(103,243,157,0.10));
-        pointer-events: none;
-      }
-
-      .pill-label {
-        display: block;
-        font-size: 10px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 4px;
-      }
-
-      .pill-value {
-        font-size: 26px;
-        font-weight: 700;
-        color: var(--green);
-        text-shadow: 0 0 12px rgba(103, 243, 157, 0.4);
-      }
-
-      .top-panel .pill:nth-child(2) .pill-value {
-        color: var(--cyan);
-        text-shadow: 0 0 12px rgba(114, 225, 255, 0.32);
-      }
-
-      .right-panel {
-        position: absolute;
-        right: 26px;
-        top: 26px;
-        width: 310px;
-        background: rgba(9, 17, 14, 0.8);
-        border: 1px solid rgba(120, 255, 180, 0.22);
-        border-radius: 12px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.25), inset 0 0 16px rgba(103,243,157,0.08);
-        padding: 16px 14px 14px;
-      }
-
-      .panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 12px;
-        padding: 0 4px;
-      }
-
-      .panel-title {
-        font-size: 12px;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        color: var(--muted);
-        font-weight: 700;
-      }
-
-      .status-bullet {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--green);
-        box-shadow: 0 0 12px rgba(103,243,157,0.8);
-      }
-
-      .module-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .module {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 9px 10px;
-        border-radius: 8px;
-        background: rgba(17, 29, 25, 0.8);
-        border: 1px solid rgba(130, 140, 150, 0.18);
-        transition: 0.18s ease;
-      }
-
-      .module:hover {
-        border-color: rgba(103,243,157,0.36);
-        box-shadow: inset 0 0 12px rgba(103,243,157,0.08);
-      }
-
-      .module.active {
-        border-color: rgba(103,243,157,0.75);
-        background: rgba(18, 38, 29, 0.85);
-        box-shadow: inset 0 0 14px rgba(103,243,157,0.12), 0 0 16px rgba(103,243,157,0.12);
-      }
-
-      .module-name {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 14px;
-        letter-spacing: 0.8px;
-      }
-
-      .module-icon {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: rgba(160, 176, 168, 0.9);
-        box-shadow: 0 0 10px rgba(160,176,168,0.25);
-      }
-
-      .module.active .module-icon {
-        background: var(--green);
-        box-shadow: 0 0 14px rgba(103, 243, 157, 0.9);
-      }
-
-      .toggle {
-        position: relative;
-        width: 34px;
-        height: 18px;
-        border-radius: 999px;
-        background: rgba(114, 120, 122, 0.8);
-        border: 1px solid rgba(255,255,255,0.08);
-        transition: 0.2s ease;
-        cursor: pointer;
-      }
-
-      .toggle::after {
-        content: "";
-        position: absolute;
-        top: 2px;
-        left: 3px;
-        width: 11px;
-        height: 11px;
-        border-radius: 50%;
-        background: #dfeae7;
-        transition: 0.2s ease;
-        box-shadow: 0 0 10px rgba(255,255,255,0.2);
-      }
-
-      .module.active .toggle {
-        background: linear-gradient(90deg, rgba(103,243,157,0.8), rgba(113,202,255,0.8));
-        box-shadow: 0 0 12px rgba(103,243,157,0.4);
-      }
-
-      .module.active .toggle::after {
-        left: 18px;
-        background: white;
-      }
-
-      .bottom-left {
-        position: absolute;
-        left: 24px;
-        bottom: 26px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-
-      .movement {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      }
-
-      .key {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 38px;
-        height: 38px;
-        padding: 0 10px;
-        border-radius: 8px;
-        background: linear-gradient(180deg, rgba(31,46,41,0.95), rgba(9,15,13,0.95));
-        border: 1px solid rgba(103,243,157,0.22);
-        box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 18px rgba(0,0,0,0.15);
-        color: var(--white);
-        font-weight: 700;
-        font-size: 14px;
-        letter-spacing: 1.6px;
-        text-transform: uppercase;
-      }
-
-      .key.space {
-        min-width: 152px;
-      }
-
-      .key.active {
-        background: linear-gradient(180deg, rgba(23, 41, 35, 1), rgba(10,17,14,1));
-        border-color: rgba(103,243,157,0.6);
-        box-shadow: inset 0 0 16px rgba(103,243,157,0.12), 0 0 18px rgba(103,243,157,0.16);
-      }
-
-      .side-status {
-        position: absolute;
-        left: 24px;
-        top: 94px;
-        width: 200px;
-        background: rgba(9, 16, 15, 0.72);
-        border-radius: 10px;
-        border: 1px solid rgba(130, 255, 195, 0.2);
-        box-shadow: inset 0 0 18px rgba(103,243,157,0.06);
-        padding: 12px 12px 10px;
-      }
-
-      .status-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 6px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        font-size: 12px;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
-      }
-
-      .status-row:last-child {
-        border-bottom: none;
-      }
-
-      .status-key {
-        color: var(--muted);
-      }
-
-      .status-value {
-        color: var(--green);
-        font-weight: 700;
-      }
-
-      .status-value.cyan {
-        color: var(--cyan);
-      }
-
-      .status-value.amber {
-        color: var(--amber);
-      }
-
-      .health-bar-wrap {
-        position: absolute;
-        right: 24px;
-        bottom: 26px;
-        width: 220px;
-      }
-
-      .health-label {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: var(--muted);
-      }
-
-      .bar {
-        position: relative;
-        height: 18px;
-        border-radius: 999px;
-        background: rgba(13, 18, 17, 0.9);
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.05);
-        box-shadow: inset 0 0 12px rgba(0,0,0,0.36);
-      }
-
-      .bar-fill {
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 82%;
-        background: linear-gradient(90deg, var(--green), #b8ff7c);
-        box-shadow: 0 0 20px rgba(103,243,157,0.45);
-      }
-
-      .bar-fill.red {
-        width: 64%;
-        background: linear-gradient(90deg, #ff7d7d, #ffb36a);
-        box-shadow: 0 0 20px rgba(255,120,120,0.4);
-      }
-
-      .bar-fill.blue {
-        width: 88%;
-        background: linear-gradient(90deg, #6fb5ff, #9ee0ff);
-        box-shadow: 0 0 20px rgba(111,181,255,0.35);
-      }
-
-      .version-selector {
-        position: absolute;
-        top: 12px;
-        left: 24px;
-        display: flex;
-        gap: 8px;
-        z-index: 1000;
-      }
-
-      .version-btn {
-        padding: 8px 14px;
-        border-radius: 6px;
-        border: 1px solid rgba(103,243,157,0.3);
-        background: rgba(13, 18, 17, 0.7);
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: 0.2s ease;
-      }
-
-      .version-btn:hover {
-        border-color: rgba(103,243,157,0.6);
-        color: var(--white);
-      }
-
-      .version-btn.active {
-        background: rgba(103,243,157,0.2);
-        border-color: rgba(103,243,157,0.8);
-        color: var(--green);
-        box-shadow: 0 0 12px rgba(103,243,157,0.25);
-      }
-
-      @media (max-width: 980px) {
-        .right-panel {
-          width: 260px;
-          right: 16px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .side-status {
-          left: 16px;
-          top: 100px;
+        :root {
+            --primary: #67f39d;
+            --primary-dark: #35c97c;
+            --secondary: #72e1ff;
+            --accent: #ffce5a;
+            --danger: #ff6c6c;
+            --bg-dark: #050505;
+            --bg-darker: #020202;
+            --panel-bg: rgba(10, 15, 14, 0.85);
+            --panel-border: rgba(103, 243, 157, 0.25);
+            --text-primary: #eafaf4;
+            --text-muted: #92b2a1;
+            --glow: rgba(103, 243, 157, 0.4);
         }
 
-        .bottom-left {
-          left: 16px;
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0e0d 0%, #050707 50%, #020202 100%);
+            font-family: 'Arial', sans-serif;
+            color: var(--text-primary);
+            overflow: hidden;
         }
 
-        .health-bar-wrap {
-          right: 16px;
-        }
-      }
-
-      @media (max-width: 760px) {
-        .top-panel {
-          top: 16px;
-          transform: translateX(-50%) scale(0.85);
-          transform-origin: center top;
-        }
-
-        .right-panel {
-          top: auto;
-          bottom: 124px;
-          right: 12px;
-          width: 230px;
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(255,255,255,0.02),
+                    rgba(255,255,255,0.02) 2px,
+                    transparent 2px,
+                    transparent 4px
+                );
+            pointer-events: none;
+            mix-blend-mode: screen;
+            z-index: 1;
         }
 
-        .side-status {
-          display: none;
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            z-index: 2;
         }
 
-        .health-bar-wrap {
-          width: 180px;
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, rgba(5, 10, 9, 0.95) 0%, rgba(2, 2, 2, 0.98) 100%);
+            border-right: 2px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar-header {
+            padding: 24px 16px;
+            border-bottom: 1px solid var(--panel-border);
+            text-align: center;
+        }
+
+        .client-title {
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            text-shadow: 0 0 20px var(--glow);
+        }
+
+        .client-version {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .nav-item:hover {
+            background: rgba(103, 243, 157, 0.08);
+            border-left-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(103, 243, 157, 0.15);
+            border-left-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: inset 0 0 12px var(--glow);
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            height: 60px;
+            background: rgba(10, 15, 14, 0.6);
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .topbar-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .server-info {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .info-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(103, 243, 157, 0.1);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+        }
+
+        .info-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .module-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(103, 243, 157, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .module-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--glow), inset 0 0 12px rgba(103, 243, 157, 0.08);
+            transform: translateY(-4px);
+        }
+
+        .module-card:hover::before {
+            opacity: 1;
+        }
+
+        .module-card.active {
+            border-color: var(--primary);
+            background: rgba(103, 243, 157, 0.15);
+            box-shadow: 0 0 25px var(--glow), inset 0 0 16px rgba(103, 243, 157, 0.1);
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .module-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: rgba(100, 110, 115, 0.6);
+            border-radius: 999px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            top: 50%;
+            left: 3px;
+            transform: translateY(-50%);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .module-card.active .toggle-switch {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            box-shadow: 0 0 12px var(--glow);
+        }
+
+        .module-card.active .toggle-switch::after {
+            left: calc(100% - 19px);
+        }
+
+        .module-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .module-settings {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 2;
+        }
+
+        .setting-chip {
+            padding: 4px 10px;
+            background: rgba(103, 243, 157, 0.1);
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            font-size: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .setting-chip:hover {
+            background: rgba(103, 243, 157, 0.2);
+            color: var(--primary);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .settings-group {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .settings-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .setting-item {
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .setting-value {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .slider {
+            width: 80px;
+            height: 4px;
+            background: rgba(103, 243, 157, 0.2);
+            border-radius: 999px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .slider::before {
+            content: "";
+            position: absolute;
+            width: 60%;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 999px;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .textbox {
+            background: rgba(5, 10, 9, 0.6);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            width: 100px;
         }
 
         .version-selector {
-          flex-wrap: wrap;
-          width: 160px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
         }
-      }
+
+        .version-btn {
+            padding: 10px 14px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .version-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .version-btn.active {
+            background: rgba(103, 243, 157, 0.2);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 12px var(--glow);
+        }
+
+        .hud-preview {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 16px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--text-muted);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hud-preview::before {
+            content: "HUD PREVIEW";
+            position: absolute;
+            opacity: 0.2;
+            font-weight: bold;
+            transform: rotate(-15deg);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            color: #000;
+            box-shadow: 0 0 20px var(--glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--glow);
+        }
+
+        .btn-secondary {
+            background: var(--panel-bg);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(103, 243, 157, 0.1);
+        }
+
+        .console-output {
+            background: rgba(5, 10, 9, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: var(--primary);
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+
+        .console-line {
+            margin: 4px 0;
+            color: var(--text-muted);
+        }
+
+        .console-line.success {
+            color: var(--primary);
+        }
+
+        .console-line.error {
+            color: var(--danger);
+        }
+
+        .console-line.warning {
+            color: var(--accent);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(103, 243, 157, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(103, 243, 157, 0.6);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--panel-border);
+            font-size: 12px;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .modules-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--panel-border);
+            }
+
+            .sidebar-nav {
+                display: flex;
+                gap: 8px;
+                padding: 12px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                max-width: 100%;
+            }
+
+            .nav-item {
+                white-space: nowrap;
+                padding: 8px 12px;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <div id="app">
-      <div class="hud">
-        <div class="version-selector">
-          <button class="version-btn active" onclick="switchVersion('classic')">Classic</button>
-          <button class="version-btn" onclick="switchVersion('neon')">Neon</button>
-          <button class="version-btn" onclick="switchVersion('dark')">Dark</button>
-          <button class="version-btn" onclick="switchVersion('cyber')">Cyber</button>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="client-title">⚡ CRYSTAL PvP</div>
+                <div class="client-version">v26.1.2 Fabric</div>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-item active" onclick="switchTab('dashboard')">
+                    <div class="nav-icon">📊</div>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('modules')">
+                    <div class="nav-icon">🎮</div>
+                    <span>Modules</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('hud')">
+                    <div class="nav-icon">🎨</div>
+                    <span>HUD Editor</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('settings')">
+                    <div class="nav-icon">⚙️</div>
+                    <span>Settings</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('profiles')">
+                    <div class="nav-icon">👤</div>
+                    <span>Profiles</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('console')">
+                    <div class="nav-icon">💻</div>
+                    <span>Console</span>
+                </div>
+            </div>
         </div>
 
-        <div class="vignette"></div>
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOPBAR -->
+            <div class="topbar">
+                <div class="topbar-title">Crystal PvP Client - Advanced Combat Optimizer</div>
+                <div class="server-info">
+                    <div class="info-badge">
+                        <div class="info-dot"></div>
+                        <span>Status: Online</span>
+                    </div>
+                    <div class="info-badge">
+                        <span>Ping: 12ms</span>
+                    </div>
+                    <div class="info-badge">
+                        <span>Version: 26.1.2</span>
+                    </div>
+                </div>
+            </div>
 
-        <div class="top-panel">
-          <div class="pill">
-            <span class="pill-label">Target</span>
-            <span class="pill-value">28</span>
-          </div>
-          <div class="pill">
-            <span class="pill-label">Ping</span>
-            <span class="pill-value">12ms</span>
-          </div>
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+                <!-- DASHBOARD -->
+                <div class="section active" id="dashboard">
+                    <div class="section-title">Dashboard</div>
+                    
+                    <div class="modules-grid">
+                        <div class="settings-group">
+                            <div class="settings-title">🎯 Quick Stats</div>
+                            <div class="stat-row">
+                                <span class="stat-label">Active Modules</span>
+                                <span class="stat-value">8/14</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">FPS</span>
+                                <span class="stat-value">240 FPS</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Ping</span>
+                                <span class="stat-value">12ms</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Memory</span>
+                                <span class="stat-value">2.4GB / 4GB</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Render Time</span>
+                                <span class="stat-value">4.2ms</span>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">🛡️ Combat Mode</div>
+                            <div class="stat-row">
+                                <span class="stat-label">Mode</span>
+                                <span class="stat-value">AGGRESSIVE</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Crystal Range</span>
+                                <span class="stat-value">8 blocks</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Anchor Delay</span>
+                                <span class="stat-value">45ms</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Totem Check</span>
+                                <span class="stat-value">ENABLED</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Rotation Smooth</span>
+                                <span class="stat-value">8</span>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">🌐 Server Info</div>
+                            <div class="stat-row">
+                                <span class="stat-label">Server</span>
+                                <span class="stat-value">Crystal PvP</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Players Online</span>
+                                <span class="stat-value">247</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Uptime</span>
+                                <span class="stat-value">99.8%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">TPS</span>
+                                <span class="stat-value">19.8 TPS</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Region</span>
+                                <span class="stat-value">US - East</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="launchGame()">⚡ Launch Game</button>
+                        <button class="btn btn-secondary" onclick="saveConfig()">💾 Save Config</button>
+                    </div>
+                </div>
+
+                <!-- MODULES -->
+                <div class="section" id="modules">
+                    <div class="section-title">Combat Modules</div>
+                    
+                    <div class="modules-grid">
+                        <div class="module-card active">
+                            <div class="module-header">
+                                <div class="module-name">Auto Crystal</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Automatically places and detonates end crystals for maximum damage.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Range: 8</div>
+                                <div class="setting-chip">Delay: 50ms</div>
+                                <div class="setting-chip">Strict</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active">
+                            <div class="module-header">
+                                <div class="module-name">Auto Anchor</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Automatically activates respawn anchors for explosive damage.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Range: 6</div>
+                                <div class="setting-chip">Delay: 100ms</div>
+                                <div class="setting-chip">Rotation</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active">
+                            <div class="module-header">
+                                <div class="module-name">Safe Anchor</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Places anchors defensively to reduce incoming damage.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Mode: Defensive</div>
+                                <div class="setting-chip">Smart</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active">
+                            <div class="module-header">
+                                <div class="module-name">Auto Totem</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Automatically swaps to totem of undying when health is low.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Health: 3.5</div>
+                                <div class="setting-chip">Fast Swap</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Free Cam</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Move camera freely without affecting player position.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Speed: 0.5</div>
+                                <div class="setting-chip">Smooth</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Double Anchor</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Places two anchors simultaneously for increased damage.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Sync: 20ms</div>
+                                <div class="setting-chip">Precise</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Auto Heal</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Automatically uses healing items when health drops.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Threshold: 8</div>
+                                <div class="setting-chip">Priority</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Hitbox</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Expands player hitbox for easier critical strikes.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Size: 0.3</div>
+                                <div class="setting-chip">Visual</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Trigger</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Automatically attacks enemies when in range.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Range: 4</div>
+                                <div class="setting-chip">CPS: 8</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Velocity</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Reduces knockback taken from attacks.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Reduce: 50%</div>
+                                <div class="setting-chip">Smooth</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">NoFall</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Prevents or reduces fall damage.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Mode: Bucket</div>
+                                <div class="setting-chip">Auto</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Sprint</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Automatic sprinting with smooth movement.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Mode: Combat</div>
+                                <div class="setting-chip">Strafe</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Step</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Allows stepping up blocks without jumping.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Height: 1.0</div>
+                                <div class="setting-chip">Smooth</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-name">Blink</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="module-desc">Teleports you to a position after disabling.</div>
+                            <div class="module-settings">
+                                <div class="setting-chip">Pulse: 100ms</div>
+                                <div class="setting-chip">Visual</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HUD EDITOR -->
+                <div class="section" id="hud">
+                    <div class="section-title">HUD Editor & Themes</div>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-group">
+                            <div class="settings-title">🎨 Theme Selection</div>
+                            <div class="version-selector">
+                                <button class="version-btn active" onclick="switchHudTheme('classic')">Classic</button>
+                                <button class="version-btn" onclick="switchHudTheme('neon')">Neon</button>
+                                <button class="version-btn" onclick="switchHudTheme('dark')">Dark</button>
+                                <button class="version-btn" onclick="switchHudTheme('cyber')">Cyber</button>
+                                <button class="version-btn" onclick="switchHudTheme('matrix')">Matrix</button>
+                                <button class="version-btn" onclick="switchHudTheme('diamond')">Diamond</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">📐 HUD Layout</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Show FPS</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Show Ping</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Show Coords</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Show Potion Effects</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Show Entity ESP</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Animated Crosshair</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">🎯 Display Options</div>
+                            <div class="setting-item">
+                                <span class="setting-label">HUD Opacity</span>
+                                <div class="slider"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Scale</span>
+                                <div class="slider"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Glow Intensity</span>
+                                <div class="slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hud-preview">
+                        ⚡ HUD PREVIEW ⚡
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="resetHud()">🔄 Reset Default</button>
+                        <button class="btn btn-secondary" onclick="exportHud()">📤 Export</button>
+                    </div>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="section" id="settings">
+                    <div class="section-title">Client Settings & Configuration</div>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-group">
+                            <div class="settings-title">⚙️ General Settings</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Enable Client</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Auto Update</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Save on Exit</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Debug Mode</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Notifications</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">🎮 Game Settings</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Mouse Sensitivity</span>
+                                <div class="slider"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">FOV</span>
+                                <input type="text" class="textbox" value="90" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Render Distance</span>
+                                <input type="text" class="textbox" value="16" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Max FPS</span>
+                                <input type="text" class="textbox" value="240" />
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">🌐 Network Settings</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Packet Priority</span>
+                                <input type="text" class="textbox" value="High" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Buffer Size (KB)</span>
+                                <input type="text" class="textbox" value="512" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Connection Timeout</span>
+                                <input type="text" class="textbox" value="30s" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Ping Optimization</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">🔒 Security & Privacy</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Anti-Cheat Bypass</span>
+                                <input type="text" class="textbox" value="Standard" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Obfuscation Level</span>
+                                <div class="slider"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Data Encryption</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Anonymous Mode</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">📊 Performance Tuning</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Multi-Threading</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Memory Optimization</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">GPU Acceleration</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Render Optimization</span>
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">⌨️ Keybinds</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Toggle Menu</span>
+                                <input type="text" class="textbox" value="RSHIFT" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Combat Mode</span>
+                                <input type="text" class="textbox" value="F" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Free Cam</span>
+                                <input type="text" class="textbox" value="C" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Screenshot</span>
+                                <input type="text" class="textbox" value="F2" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+                        <button class="btn btn-secondary" onclick="resetSettings()">🔄 Reset to Default</button>
+                    </div>
+                </div>
+
+                <!-- PROFILES -->
+                <div class="section" id="profiles">
+                    <div class="section-title">Save & Load Profiles</div>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-group">
+                            <div class="settings-title">📂 Your Profiles</div>
+                            <div class="stat-row">
+                                <span class="stat-label">Aggressive (Active)</span>
+                                <span class="stat-value">▸ Load</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Defensive</span>
+                                <span class="stat-value">▸ Load</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Balanced</span>
+                                <span class="stat-value">▸ Load</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Speed Run</span>
+                                <span class="stat-value">▸ Load</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Dueling 1v1</span>
+                                <span class="stat-value">▸ Load</span>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">➕ Create New Profile</div>
+                            <div class="setting-item">
+                                <span class="setting-label">Profile Name</span>
+                                <input type="text" class="textbox" placeholder="New Profile" style="width: 150px;" />
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Base Profile</span>
+                                <input type="text" class="textbox" value="Default" style="width: 150px;" />
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <button class="btn btn-primary" onclick="createProfile()">Create Profile</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="settings-title">🔄 Profile Actions</div>
+                            <div class="stat-row">
+                                <span class="stat-label">Export All Profiles</span>
+                                <span class="stat-value">📤</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Import Profiles</span>
+                                <span class="stat-value">📥</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Backup</span>
+                                <span class="stat-value">💾</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Restore</span>
+                                <span class="stat-value">↩️</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONSOLE -->
+                <div class="section" id="console">
+                    <div class="section-title">Developer Console</div>
+                    
+                    <div class="console-output" id="consoleOutput">
+                        <div class="console-line success">[SYSTEM] Crystal PvP Client v26.1.2 Initialized</div>
+                        <div class="console-line success">[FABRIC] Loader: 0.15.2 | Installer: 1.0.1</div>
+                        <div class="console-line success">[LOADER] 12 mods loaded successfully</div>
+                        <div class="console-line warning">[WARN] High CPU usage detected</div>
+                        <div class="console-line success">[MODULE] Auto Crystal Module Ready</div>
+                        <div class="console-line success">[MODULE] Auto Anchor Module Ready</div>
+                        <div class="console-line success">[NETWORK] Connected to server: Crystal PvP</div>
+                        <div class="console-line success">[RENDER] OpenGL 4.6 Initialized</div>
+                        <div class="console-line success">[MEMORY] 2.4GB / 4GB allocated</div>
+                        <div class="console-line">> Ready for combat...</div>
+                    </div>
+
+                    <div style="margin-top: 16px; display: flex; gap: 12px;">
+                        <input type="text" class="textbox" placeholder="Enter command..." style="flex: 1; width: auto;" />
+                        <button class="btn btn-primary" onclick="executeCommand()">Execute</button>
+                    </div>
+
+                    <div class="btn-group" style="margin-top: 16px;">
+                        <button class="btn btn-secondary" onclick="clearConsole()">Clear Console</button>
+                        <button class="btn btn-secondary" onclick="exportLogs()">Export Logs</button>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="side-status">
-          <div class="status-row">
-            <span class="status-key">CP</span>
-            <span class="status-value">21</span>
-          </div>
-          <div class="status-row">
-            <span class="status-key">Elytra</span>
-            <span class="status-value cyan">ON</span>
-          </div>
-          <div class="status-row">
-            <span class="status-key">Speed</span>
-            <span class="status-value amber">MAX</span>
-          </div>
-          <div class="status-row">
-            <span class="status-key">Chain</span>
-            <span class="status-value">3x</span>
-          </div>
-        </div>
-
-        <div class="crosshair">
-          <div class="ring"></div>
-          <div class="dot"></div>
-        </div>
-
-        <div class="right-panel">
-          <div class="panel-header">
-            <div class="panel-title">Modules</div>
-            <div class="status-bullet"></div>
-          </div>
-
-          <div class="module-list">
-            <div class="module active">
-              <div class="module-name"><span class="module-icon"></span> Auto Crystal</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module active">
-              <div class="module-name"><span class="module-icon"></span> Auto Anchor</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module active">
-              <div class="module-name"><span class="module-icon"></span> Safe Anchor</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module active">
-              <div class="module-name"><span class="module-icon"></span> Auto Totem</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module">
-              <div class="module-name"><span class="module-icon"></span> Free Cam</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module">
-              <div class="module-name"><span class="module-icon"></span> Double Anchor</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module">
-              <div class="module-name"><span class="module-icon"></span> Auto Heal</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module">
-              <div class="module-name"><span class="module-icon"></span> Hitbox</div>
-              <div class="toggle"></div>
-            </div>
-
-            <div class="module">
-              <div class="module-name"><span class="module-icon"></span> Trigger</div>
-              <div class="toggle"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bottom-left">
-          <div class="movement">
-            <span class="key active">W</span>
-            <span class="key active">A</span>
-            <span class="key active">S</span>
-            <span class="key active">D</span>
-          </div>
-          <div class="movement">
-            <span class="key space active">Space</span>
-          </div>
-        </div>
-
-        <div class="health-bar-wrap">
-          <div class="health-label">
-            <span>Health</span>
-            <span>82%</span>
-          </div>
-          <div class="bar">
-            <div class="bar-fill"></div>
-          </div>
-
-          <div style="height: 12px;"></div>
-
-          <div class="health-label">
-            <span>Armor</span>
-            <span>64%</span>
-          </div>
-          <div class="bar">
-            <div class="bar-fill red"></div>
-          </div>
-
-          <div style="height: 12px;"></div>
-
-          <div class="health-label">
-            <span>Energy</span>
-            <span>88%</span>
-          </div>
-          <div class="bar">
-            <div class="bar-fill blue"></div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <script>
-      const root = document.documentElement;
-      const versions = {
-        classic: {
-          '--bg': '#070d0c',
-          '--green': '#67f39d',
-          '--cyan': '#72e1ff',
-          '--white': '#eafaf4',
-          '--muted': '#92b2a1',
-        },
-        neon: {
-          '--bg': '#0a0e0d',
-          '--green': '#00ff88',
-          '--cyan': '#00ffff',
-          '--white': '#ffffff',
-          '--muted': '#00dd88',
-        },
-        dark: {
-          '--bg': '#050505',
-          '--green': '#3f9966',
-          '--cyan': '#4a7a9f',
-          '--white': '#b8b8b8',
-          '--muted': '#666666',
-        },
-        cyber: {
-          '--bg': '#0d0221',
-          '--green': '#ff006e',
-          '--cyan': '#8338ec',
-          '--white': '#ffbe0b',
-          '--muted': '#fb5607',
-        },
-      };
-
-      function switchVersion(version) {
-        const btns = document.querySelectorAll('.version-btn');
-        btns.forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-
-        const colors = versions[version];
-        for (const [key, value] of Object.entries(colors)) {
-          root.style.setProperty(key, value);
+        function switchTab(tabName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav item
+            event.target.closest('.nav-item').classList.add('active');
         }
-      }
 
-      const modules = document.querySelectorAll(".module");
-      modules.forEach((module) => {
-        module.addEventListener("click", () => {
-          module.classList.toggle("active");
+        function switchHudTheme(theme) {
+            document.querySelectorAll('.version-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            addConsoleMessage(`[HUD] Theme switched to: ${theme.toUpperCase()}`, 'success');
+        }
+
+        function launchGame() {
+            addConsoleMessage('[LAUNCH] Starting game with optimized settings...', 'success');
+            addConsoleMessage('[LAUNCH] Modules initialized and ready for combat!', 'success');
+            addConsoleMessage('[LAUNCH] Good luck out there! ⚡', 'success');
+        }
+
+        function saveConfig() {
+            addConsoleMessage('[CONFIG] Configuration saved successfully', 'success');
+        }
+
+        function resetHud() {
+            addConsoleMessage('[HUD] Reset to default configuration', 'success');
+        }
+
+        function exportHud() {
+            addConsoleMessage('[EXPORT] HUD configuration exported to file', 'success');
+        }
+
+        function saveSettings() {
+            addConsoleMessage('[SETTINGS] All settings saved successfully', 'success');
+        }
+
+        function resetSettings() {
+            addConsoleMessage('[SETTINGS] Reset to default settings', 'warning');
+        }
+
+        function createProfile() {
+            addConsoleMessage('[PROFILE] New profile created successfully', 'success');
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleOutput').innerHTML = '';
+            addConsoleMessage('[CONSOLE] Console cleared', 'success');
+        }
+
+        function exportLogs() {
+            addConsoleMessage('[EXPORT] Logs exported to file', 'success');
+        }
+
+        function executeCommand() {
+            addConsoleMessage('[COMMAND] Command executed', 'success');
+        }
+
+        function addConsoleMessage(message, type = '') {
+            const console = document.getElementById('consoleOutput');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = message;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Module toggle functionality
+        document.querySelectorAll('.module-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
         });
-      });
 
-      const keys = document.querySelectorAll(".key");
-      keys.forEach((key) => {
-        key.addEventListener("click", () => {
-          key.classList.toggle("active");
+        // Toggle switches
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.parentElement.parentElement.parentElement.classList.toggle('active');
+            });
         });
-      });
-
-      // Keyboard controls
-      document.addEventListener('keydown', (e) => {
-        const key = e.key.toUpperCase();
-        if (['W', 'A', 'S', 'D'].includes(key)) {
-          const keyEl = Array.from(keys).find(k => k.textContent === key);
-          if (keyEl) keyEl.classList.add('active');
-        }
-        if (e.code === 'Space') {
-          const spaceKey = Array.from(keys).find(k => k.classList.contains('space'));
-          if (spaceKey) spaceKey.classList.add('active');
-        }
-      });
-
-      document.addEventListener('keyup', (e) => {
-        const key = e.key.toUpperCase();
-        if (['W', 'A', 'S', 'D'].includes(key)) {
-          const keyEl = Array.from(keys).find(k => k.textContent === key);
-          if (keyEl) keyEl.classList.remove('active');
-        }
-        if (e.code === 'Space') {
-          const spaceKey = Array.from(keys).find(k => k.classList.contains('space'));
-          if (spaceKey) spaceKey.classList.remove('active');
-        }
-      });
     </script>
-  </body>
+</body>
 </html>
