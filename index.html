@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minecraft PvP HUD Mockup</title>
+    <style>
+      :root {
+        --bg: #070d0c;
+        --bg2: #0d1714;
+        --panel: rgba(19, 32, 29, 0.8);
+        --panel2: rgba(12, 23, 19, 0.9);
+        --green: #67f39d;
+        --green-2: #35c97c;
+        --lime: #d9ff7a;
+        --cyan: #72e1ff;
+        --blue: #7ab9ff;
+        --amber: #ffce5a;
+        --red: #ff6c6c;
+        --white: #eafaf4;
+        --muted: #92b2a1;
+        --shadow: rgba(0, 0, 0, 0.42);
+        --outline: rgba(123, 255, 188, 0.28);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        height: 100%;
+        background:
+          linear-gradient(to bottom, rgba(12, 21, 19, 0.4), rgba(10, 13, 15, 0.7)),
+          radial-gradient(circle at 50% 15%, rgba(90, 214, 123, 0.12), transparent 30%),
+          linear-gradient(180deg, #09100d 0%, #050707 100%);
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        color: var(--white);
+        overflow: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.025),
+            rgba(255,255,255,0.025) 2px,
+            transparent 2px,
+            transparent 4px
+          ),
+          linear-gradient(90deg, rgba(0,0,0,0.1), rgba(0,0,0,0));
+        pointer-events: none;
+        mix-blend-mode: screen;
+      }
+
+      #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      .hud {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.38) 100%);
+      }
+
+      .crosshair {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 42px;
+        height: 42px;
+        transform: translate(-50%, -50%);
+        filter: drop-shadow(0 0 10px rgba(115, 255, 185, 0.55));
+      }
+
+      .crosshair::before,
+      .crosshair::after {
+        content: "";
+        position: absolute;
+        background: rgba(121, 255, 185, 0.95);
+        box-shadow: 0 0 8px rgba(121, 255, 185, 0.8);
+      }
+
+      .crosshair::before {
+        width: 2px;
+        height: 42px;
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+      }
+
+      .crosshair::after {
+        width: 42px;
+        height: 2px;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .crosshair .dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 16px rgba(255,255,255,0.8);
+      }
+
+      .crosshair .ring {
+        position: absolute;
+        inset: 9px;
+        border: 1px solid rgba(135, 255, 185, 0.8);
+        border-radius: 50%;
+        box-shadow: inset 0 0 10px rgba(135, 255, 185, 0.15);
+      }
+
+      .top-panel {
+        position: absolute;
+        left: 50%;
+        top: 24px;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .pill {
+        position: relative;
+        padding: 10px 18px;
+        min-width: 150px;
+        background: rgba(17, 27, 24, 0.76);
+        border: 1px solid rgba(103, 243, 157, 0.4);
+        border-radius: 8px;
+        box-shadow: inset 0 0 12px rgba(103, 243, 157, 0.08), 0 0 18px rgba(33, 88, 62, 0.25);
+      }
+
+      .pill::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(103,243,157,0.10), transparent 35%, transparent 65%, rgba(103,243,157,0.10));
+        pointer-events: none;
+      }
+
+      .pill-label {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+
+      .pill-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--green);
+        text-shadow: 0 0 12px rgba(103, 243, 157, 0.4);
+      }
+
+      .top-panel .pill:nth-child(2) .pill-value {
+        color: var(--cyan);
+        text-shadow: 0 0 12px rgba(114, 225, 255, 0.32);
+      }
+
+      .right-panel {
+        position: absolute;
+        right: 26px;
+        top: 26px;
+        width: 310px;
+        background: rgba(9, 17, 14, 0.8);
+        border: 1px solid rgba(120, 255, 180, 0.22);
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.25), inset 0 0 16px rgba(103,243,157,0.08);
+        padding: 16px 14px 14px;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding: 0 4px;
+      }
+
+      .panel-title {
+        font-size: 12px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .status-bullet {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 12px rgba(103,243,157,0.8);
+      }
+
+      .module-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .module {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 10px;
+        border-radius: 8px;
+        background: rgba(17, 29, 25, 0.8);
+        border: 1px solid rgba(130, 140, 150, 0.18);
+        transition: 0.18s ease;
+      }
+
+      .module:hover {
+        border-color: rgba(103,243,157,0.36);
+        box-shadow: inset 0 0 12px rgba(103,243,157,0.08);
+      }
+
+      .module.active {
+        border-color: rgba(103,243,157,0.75);
+        background: rgba(18, 38, 29, 0.85);
+        box-shadow: inset 0 0 14px rgba(103,243,157,0.12), 0 0 16px rgba(103,243,157,0.12);
+      }
+
+      .module-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        letter-spacing: 0.8px;
+      }
+
+      .module-icon {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(160, 176, 168, 0.9);
+        box-shadow: 0 0 10px rgba(160,176,168,0.25);
+      }
+
+      .module.active .module-icon {
+        background: var(--green);
+        box-shadow: 0 0 14px rgba(103, 243, 157, 0.9);
+      }
+
+      .toggle {
+        position: relative;
+        width: 34px;
+        height: 18px;
+        border-radius: 999px;
+        background: rgba(114, 120, 122, 0.8);
+        border: 1px solid rgba(255,255,255,0.08);
+        transition: 0.2s ease;
+        cursor: pointer;
+      }
+
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 3px;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #dfeae7;
+        transition: 0.2s ease;
+        box-shadow: 0 0 10px rgba(255,255,255,0.2);
+      }
+
+      .module.active .toggle {
+        background: linear-gradient(90deg, rgba(103,243,157,0.8), rgba(113,202,255,0.8));
+        box-shadow: 0 0 12px rgba(103,243,157,0.4);
+      }
+
+      .module.active .toggle::after {
+        left: 18px;
+        background: white;
+      }
+
+      .bottom-left {
+        position: absolute;
+        left: 24px;
+        bottom: 26px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .movement {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .key {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        height: 38px;
+        padding: 0 10px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, rgba(31,46,41,0.95), rgba(9,15,13,0.95));
+        border: 1px solid rgba(103,243,157,0.22);
+        box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 18px rgba(0,0,0,0.15);
+        color: var(--white);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+      }
+
+      .key.space {
+        min-width: 152px;
+      }
+
+      .key.active {
+        background: linear-gradient(180deg, rgba(23, 41, 35, 1), rgba(10,17,14,1));
+        border-color: rgba(103,243,157,0.6);
+        box-shadow: inset 0 0 16px rgba(103,243,157,0.12), 0 0 18px rgba(103,243,157,0.16);
+      }
+
+      .side-status {
+        position: absolute;
+        left: 24px;
+        top: 94px;
+        width: 200px;
+        background: rgba(9, 16, 15, 0.72);
+        border-radius: 10px;
+        border: 1px solid rgba(130, 255, 195, 0.2);
+        box-shadow: inset 0 0 18px rgba(103,243,157,0.06);
+        padding: 12px 12px 10px;
+      }
+
+      .status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        font-size: 12px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+      }
+
+      .status-row:last-child {
+        border-bottom: none;
+      }
+
+      .status-key {
+        color: var(--muted);
+      }
+
+      .status-value {
+        color: var(--green);
+        font-weight: 700;
+      }
+
+      .status-value.cyan {
+        color: var(--cyan);
+      }
+
+      .status-value.amber {
+        color: var(--amber);
+      }
+
+      .health-bar-wrap {
+        position: absolute;
+        right: 24px;
+        bottom: 26px;
+        width: 220px;
+      }
+
+      .health-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--muted);
+      }
+
+      .bar {
+        position: relative;
+        height: 18px;
+        border-radius: 999px;
+        background: rgba(13, 18, 17, 0.9);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.05);
+        box-shadow: inset 0 0 12px rgba(0,0,0,0.36);
+      }
+
+      .bar-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 82%;
+        background: linear-gradient(90deg, var(--green), #b8ff7c);
+        box-shadow: 0 0 20px rgba(103,243,157,0.45);
+      }
+
+      .bar-fill.red {
+        width: 64%;
+        background: linear-gradient(90deg, #ff7d7d, #ffb36a);
+        box-shadow: 0 0 20px rgba(255,120,120,0.4);
+      }
+
+      .bar-fill.blue {
+        width: 88%;
+        background: linear-gradient(90deg, #6fb5ff, #9ee0ff);
+        box-shadow: 0 0 20px rgba(111,181,255,0.35);
+      }
+
+      .version-selector {
+        position: absolute;
+        top: 12px;
+        left: 24px;
+        display: flex;
+        gap: 8px;
+        z-index: 1000;
+      }
+
+      .version-btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid rgba(103,243,157,0.3);
+        background: rgba(13, 18, 17, 0.7);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .version-btn:hover {
+        border-color: rgba(103,243,157,0.6);
+        color: var(--white);
+      }
+
+      .version-btn.active {
+        background: rgba(103,243,157,0.2);
+        border-color: rgba(103,243,157,0.8);
+        color: var(--green);
+        box-shadow: 0 0 12px rgba(103,243,157,0.25);
+      }
+
+      @media (max-width: 980px) {
+        .right-panel {
+          width: 260px;
+          right: 16px;
+        }
+
+        .side-status {
+          left: 16px;
+          top: 100px;
+        }
+
+        .bottom-left {
+          left: 16px;
+        }
+
+        .health-bar-wrap {
+          right: 16px;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .top-panel {
+          top: 16px;
+          transform: translateX(-50%) scale(0.85);
+          transform-origin: center top;
+        }
+
+        .right-panel {
+          top: auto;
+          bottom: 124px;
+          right: 12px;
+          width: 230px;
+        }
+
+        .side-status {
+          display: none;
+        }
+
+        .health-bar-wrap {
+          width: 180px;
+        }
+
+        .version-selector {
+          flex-wrap: wrap;
+          width: 160px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="hud">
+        <div class="version-selector">
+          <button class="version-btn active" onclick="switchVersion('classic')">Classic</button>
+          <button class="version-btn" onclick="switchVersion('neon')">Neon</button>
+          <button class="version-btn" onclick="switchVersion('dark')">Dark</button>
+          <button class="version-btn" onclick="switchVersion('cyber')">Cyber</button>
+        </div>
+
+        <div class="vignette"></div>
+
+        <div class="top-panel">
+          <div class="pill">
+            <span class="pill-label">Target</span>
+            <span class="pill-value">28</span>
+          </div>
+          <div class="pill">
+            <span class="pill-label">Ping</span>
+            <span class="pill-value">12ms</span>
+          </div>
+        </div>
+
+        <div class="side-status">
+          <div class="status-row">
+            <span class="status-key">CP</span>
+            <span class="status-value">21</span>
+          </div>
+          <div class="status-row">
+            <span class="status-key">Elytra</span>
+            <span class="status-value cyan">ON</span>
+          </div>
+          <div class="status-row">
+            <span class="status-key">Speed</span>
+            <span class="status-value amber">MAX</span>
+          </div>
+          <div class="status-row">
+            <span class="status-key">Chain</span>
+            <span class="status-value">3x</span>
+          </div>
+        </div>
+
+        <div class="crosshair">
+          <div class="ring"></div>
+          <div class="dot"></div>
+        </div>
+
+        <div class="right-panel">
+          <div class="panel-header">
+            <div class="panel-title">Modules</div>
+            <div class="status-bullet"></div>
+          </div>
+
+          <div class="module-list">
+            <div class="module active">
+              <div class="module-name"><span class="module-icon"></span> Auto Crystal</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module active">
+              <div class="module-name"><span class="module-icon"></span> Auto Anchor</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module active">
+              <div class="module-name"><span class="module-icon"></span> Safe Anchor</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module active">
+              <div class="module-name"><span class="module-icon"></span> Auto Totem</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module">
+              <div class="module-name"><span class="module-icon"></span> Free Cam</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module">
+              <div class="module-name"><span class="module-icon"></span> Double Anchor</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module">
+              <div class="module-name"><span class="module-icon"></span> Auto Heal</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module">
+              <div class="module-name"><span class="module-icon"></span> Hitbox</div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="module">
+              <div class="module-name"><span class="module-icon"></span> Trigger</div>
+              <div class="toggle"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-left">
+          <div class="movement">
+            <span class="key active">W</span>
+            <span class="key active">A</span>
+            <span class="key active">S</span>
+            <span class="key active">D</span>
+          </div>
+          <div class="movement">
+            <span class="key space active">Space</span>
+          </div>
+        </div>
+
+        <div class="health-bar-wrap">
+          <div class="health-label">
+            <span>Health</span>
+            <span>82%</span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill"></div>
+          </div>
+
+          <div style="height: 12px;"></div>
+
+          <div class="health-label">
+            <span>Armor</span>
+            <span>64%</span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill red"></div>
+          </div>
+
+          <div style="height: 12px;"></div>
+
+          <div class="health-label">
+            <span>Energy</span>
+            <span>88%</span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill blue"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      const versions = {
+        classic: {
+          '--bg': '#070d0c',
+          '--green': '#67f39d',
+          '--cyan': '#72e1ff',
+          '--white': '#eafaf4',
+          '--muted': '#92b2a1',
+        },
+        neon: {
+          '--bg': '#0a0e0d',
+          '--green': '#00ff88',
+          '--cyan': '#00ffff',
+          '--white': '#ffffff',
+          '--muted': '#00dd88',
+        },
+        dark: {
+          '--bg': '#050505',
+          '--green': '#3f9966',
+          '--cyan': '#4a7a9f',
+          '--white': '#b8b8b8',
+          '--muted': '#666666',
+        },
+        cyber: {
+          '--bg': '#0d0221',
+          '--green': '#ff006e',
+          '--cyan': '#8338ec',
+          '--white': '#ffbe0b',
+          '--muted': '#fb5607',
+        },
+      };
+
+      function switchVersion(version) {
+        const btns = document.querySelectorAll('.version-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        const colors = versions[version];
+        for (const [key, value] of Object.entries(colors)) {
+          root.style.setProperty(key, value);
+        }
+      }
+
+      const modules = document.querySelectorAll(".module");
+      modules.forEach((module) => {
+        module.addEventListener("click", () => {
+          module.classList.toggle("active");
+        });
+      });
+
+      const keys = document.querySelectorAll(".key");
+      keys.forEach((key) => {
+        key.addEventListener("click", () => {
+          key.classList.toggle("active");
+        });
+      });
+
+      // Keyboard controls
+      document.addEventListener('keydown', (e) => {
+        const key = e.key.toUpperCase();
+        if (['W', 'A', 'S', 'D'].includes(key)) {
+          const keyEl = Array.from(keys).find(k => k.textContent === key);
+          if (keyEl) keyEl.classList.add('active');
+        }
+        if (e.code === 'Space') {
+          const spaceKey = Array.from(keys).find(k => k.classList.contains('space'));
+          if (spaceKey) spaceKey.classList.add('active');
+        }
+      });
+
+      document.addEventListener('keyup', (e) => {
+        const key = e.key.toUpperCase();
+        if (['W', 'A', 'S', 'D'].includes(key)) {
+          const keyEl = Array.from(keys).find(k => k.textContent === key);
+          if (keyEl) keyEl.classList.remove('active');
+        }
+        if (e.code === 'Space') {
+          const spaceKey = Array.from(keys).find(k => k.classList.contains('space'));
+          if (spaceKey) spaceKey.classList.remove('active');
+        }
+      });
+    </script>
+  </body>
+</html>
